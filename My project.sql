@@ -1,27 +1,21 @@
--- ============================================================
--- LOGISTICS TRACKING DATABASE SETUP & LOAD SCRIPT
--- Compatible with: MySQL 5.7+ / MySQL 8.x
--- Data file: logistics_cleaned.csv
--- ============================================================
 
--- ------------------------------------------------------------
 -- STEP 1: Enable local file import & disable strict mode
--- ------------------------------------------------------------
+
 SET SQL_MODE = '';
 SET GLOBAL local_infile = ON;
 
--- ------------------------------------------------------------
+
 -- STEP 2: Create & select database
--- ------------------------------------------------------------
+
 CREATE DATABASE IF NOT EXISTS logistics_db
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
 USE logistics_db;
 
--- ------------------------------------------------------------
+
 -- STEP 3: Create shipments table
--- ------------------------------------------------------------
+
 DROP TABLE IF EXISTS shipments;
 
 CREATE TABLE shipments (
@@ -57,12 +51,9 @@ CREATE TABLE shipments (
   PRIMARY KEY (booking_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ------------------------------------------------------------
--- STEP 4: Load cleaned CSV data
--- NOTE: Update the file path below to where you saved
---       logistics_cleaned.csv on your machine
--- ------------------------------------------------------------
--- i have error duplicate entry so i decided to truncate the table 
+
+--  STEP 4: Load  CSV data
+
 
 
 SET GLOBAL local_infile = 1;
@@ -123,13 +114,12 @@ SET
 
 -- Confirm load
 SELECT CONCAT('Rows loaded: ', COUNT(*)) AS status FROM shipments;
--- ============================================================
--- ANALYSIS QUERIES
--- ============================================================
 
--- ------------------------------------------------------------
+-- ANALYSIS QUERIES
+
+
 -- Q1: Top routes by frequency + average distance
--- ------------------------------------------------------------
+
 SELECT
   origin_location,
   destination_location,
@@ -140,9 +130,9 @@ GROUP BY origin_location, destination_location
 ORDER BY route_count DESC
 LIMIT 20;
 
--- ------------------------------------------------------------
+
 -- Q2: On-time vs Delayed breakdown
--- ------------------------------------------------------------
+
 SELECT
   ontime,
   COUNT(*) AS shipment_count,
@@ -150,17 +140,8 @@ SELECT
 FROM shipments
 GROUP BY ontime;
 
--- ------------------------------------------------------------
+
 -- Q3: Delay rate by supplier
--- ------------------------------------------------------------
--- SELECT
---   supplier_name,
---   COUNT(*)                                                                AS total_shipments,
---   SUM(CASE WHEN ontime = 'No' THEN 1 ELSE 0 END)                         AS delayed,
---   ROUND(100.0 * SUM(CASE WHEN ontime = 'No' THEN 1 ELSE 0 END) / COUNT(*), 1) AS delay_rate_pct
--- FROM shipments
--- GROUP BY supplier_name
--- ORDER BY delay_rate_pct DESC;
 
 
 SELECT
@@ -172,9 +153,9 @@ FROM shipments
 GROUP BY supplier_name
 ORDER BY delay_rate_pct DESC;
 
--- ------------------------------------------------------------
+
 -- Q4: Average & max delivery time per route (in hours)
--- ------------------------------------------------------------
+
 SELECT
   origin_location,
   destination_location,
@@ -187,9 +168,8 @@ GROUP BY origin_location, destination_location
 ORDER BY avg_delivery_hrs DESC
 LIMIT 15;
 
--- ------------------------------------------------------------
+
 -- Q5: Peak booking days (top 10 busiest)
--- ------------------------------------------------------------
 SELECT
   DATE(booking_date) AS booking_day,
   COUNT(*)           AS bookings
@@ -199,9 +179,9 @@ GROUP BY booking_day
 ORDER BY bookings DESC
 LIMIT 10;
 
--- ------------------------------------------------------------
+
 -- Q6: Most shipped materials
--- ------------------------------------------------------------
+
 SELECT
   material_shipped,
   COUNT(*)                                                     AS shipment_count,
@@ -212,9 +192,9 @@ GROUP BY material_shipped
 ORDER BY shipment_count DESC
 LIMIT 15;
 
--- ------------------------------------------------------------
+
 -- Q7: Vehicle type performance
--- ------------------------------------------------------------
+
 SELECT
   vehicle_type,
   COUNT(*)                                                                AS trips,
@@ -225,9 +205,9 @@ WHERE vehicle_type != ''
 GROUP BY vehicle_type
 ORDER BY trips DESC;
 
--- ------------------------------------------------------------
+
 -- Q8: Delay hotspots (current locations with most delays)
--- ------------------------------------------------------------
+
 SELECT
   current_location,
   COUNT(*) AS delay_count
@@ -237,9 +217,9 @@ GROUP BY current_location
 ORDER BY delay_count DESC
 LIMIT 10;
 
--- ------------------------------------------------------------
+
 -- Q9: Top customers by volume + delay count
--- ------------------------------------------------------------
+
 SELECT
   customer_name,
   COUNT(*)                                          AS total_shipments,
@@ -249,9 +229,9 @@ GROUP BY customer_name
 ORDER BY total_shipments DESC
 LIMIT 10;
 
--- ------------------------------------------------------------
+
 -- Q10: Monthly shipment trend
--- ------------------------------------------------------------
+
 SELECT
   DATE_FORMAT(booking_date, '%Y-%m') AS month,
   COUNT(*)                           AS total_shipments,
